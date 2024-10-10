@@ -59,7 +59,13 @@ final class TaskListViewController: UITableViewController {
         content.text = taskList.title
         let totalTasks = taskList.tasks.count
         let completedTasks = taskList.tasks.filter("isComplete == true").count
-        let tasksInfo = "\(totalTasks)/\(completedTasks)"
+        var tasksInfo: String
+
+        if totalTasks > 0 && completedTasks == totalTasks {
+            tasksInfo = "✔️"
+        } else {
+            tasksInfo = "\(completedTasks)/\(totalTasks)"
+        }
         
         content.secondaryText = tasksInfo
         cell.contentConfiguration = content

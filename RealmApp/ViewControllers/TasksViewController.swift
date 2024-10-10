@@ -83,7 +83,7 @@ final class TasksViewController: UITableViewController {
                 completionHandler(true)
             }
             
-            let doneTitle = task.isComplete ? "Remove" : "Done"
+            let doneTitle = task.isComplete ? "Return" : "Done"
             let doneAction = UIContextualAction(style: .normal, title: doneTitle) { [unowned self] (_, _, completionHandler) in
                 storageManager.write {
                     task.isComplete.toggle()

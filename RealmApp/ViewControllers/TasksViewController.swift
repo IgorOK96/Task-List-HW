@@ -66,50 +66,49 @@ final class TasksViewController: UITableViewController {
     }
 
     // MARK: - UITableViewDelegate
-        override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-            let task = indexPath.section == 0 ? currentTasks[indexPath.row] : completedTasks[indexPath.row]
-            
-            let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { [unowned self] (_, _, completionHandler) in
-                storageManager.delete(task)
-                updateTasks()
-                tableView.deleteRows(at: [indexPath], with: .automatic)
-                completionHandler(true)
+    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let task = indexPath.section == 0 ? currentTasks[indexPath.row] : completedTasks[indexPath.row]
+        
+        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { [unowned self] (_, _, completionHandler) in
+            storageManager.delete(task)
+            updateTasks()
+            tableView.deleteRows(at: [indexPath], with: .automatic)
+            completionHandler(true)
+        }
+        
+        let editAction = UIContextualAction(style: .normal, title: "Edit") { [unowned self] (_, _, completionHandler) in
+            showAlert(with: task) {
+                tableView.reloadRows(at: [indexPath], with: .automatic)
             }
+            completionHandler(true)
+        }
+        
+        let doneTitle = task.isComplete ? "Return" : "Done"
+        let doneAction = UIContextualAction(style: .normal, title: doneTitle) { [unowned self] (_, _, completionHandler) in
             
-            let editAction = UIContextualAction(style: .normal, title: "Edit") { [unowned self] (_, _, completionHandler) in
-                showAlert(with: task) {
-                    tableView.reloadRows(at: [indexPath], with: .automatic)
-                }
-                completionHandler(true)
-            }
-            
-            let doneTitle = task.isComplete ? "Return" : "Done"
-            let doneAction = UIContextualAction(style: .normal, title: doneTitle) { [unowned self] (_, _, completionHandler) in
+            tableView.performBatchUpdates({
                 storageManager.write {
                     task.isComplete.toggle()
                 }
-                tableView.beginUpdates()
-                
-                tableView.deleteRows(at: [indexPath], with: .automatic)
                 
                 updateTasks()
                 
-                let newSection = task.isComplete ? 1 : 0
-                let newRow = (task.isComplete ? completedTasks : currentTasks).index(of: task)!
-                let newIndexPath = IndexPath(row: newRow, section: newSection)
+                let fromIndexPath = indexPath
+                let toSection = task.isComplete ? 1 : 0
+                let toRow = (task.isComplete ? completedTasks : currentTasks).index(of: task)!
+                let toIndexPath = IndexPath(row: toRow, section: toSection)
                 
-                tableView.insertRows(at: [newIndexPath], with: .automatic)
-            
-                tableView.endUpdates()
-                
+                tableView.moveRow(at: fromIndexPath, to: toIndexPath)
+            }, completion: { _ in
                 completionHandler(true)
-            }
-            
-            editAction.backgroundColor = .orange
-            doneAction.backgroundColor = task.isComplete ? .systemBlue : .systemGreen
-            
-            return UISwipeActionsConfiguration(actions: [doneAction, editAction, deleteAction])
+            })
         }
+        
+        editAction.backgroundColor = .orange
+        doneAction.backgroundColor = task.isComplete ? .systemBlue : .systemGreen
+        
+        return UISwipeActionsConfiguration(actions: [doneAction, editAction, deleteAction])
+    }
 }
 
 extension TasksViewController {
